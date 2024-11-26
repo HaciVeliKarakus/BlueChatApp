@@ -24,6 +24,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.hvk.bluechatapp.ui.chat.ChatViewModel
 import io.hvk.bluechatapp.ui.people.PeopleViewModel
 import io.hvk.bluechatapp.ui.settings.SettingsViewModel
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.text.style.TextAlign
+import io.hvk.bluechatapp.data.User
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import io.hvk.bluechatapp.ui.people.PeopleUiState
+import io.hvk.bluechatapp.ui.people.ProfileDetailScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,7 +87,7 @@ fun MainScreen() {
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = WhatsAppGreen
+                    containerColor = iOSBlue
                 ),
                 actions = {
                     IconButton(onClick = { /* TODO: Search action */ }) {
@@ -97,7 +109,7 @@ fun MainScreen() {
         },
         bottomBar = {
             NavigationBar(
-                containerColor = WhatsAppGreen,
+                containerColor = iOSBlue,
             ) {
                 tabs.forEachIndexed { index, tab ->
                     NavigationBarItem(
@@ -119,7 +131,7 @@ fun MainScreen() {
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Color.White,
                             unselectedIconColor = Color.White.copy(alpha = 0.6f),
-                            indicatorColor = WhatsAppLightGreen
+                            indicatorColor = iOSLightBlue
                         )
                     )
                 }
@@ -186,27 +198,185 @@ data class TabItem(
 @Composable
 fun PersonListScreen(viewModel: PeopleViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsState()
+    var showingProfile by remember { mutableStateOf<User?>(null) }
 
+    if (showingProfile != null) {
+        ProfileDetailScreen(
+            user = showingProfile!!,
+            onBackClick = { showingProfile = null },
+            onStartChat = {
+                // TODO: Implement chat start
+                showingProfile = null
+            }
+        )
+    } else {
+        PersonListContent(
+            uiState = uiState,
+            onUserClick = { showingProfile = it },
+            onUserLongClick = { viewModel.toggleUserSelection(it.id) },
+            onScanClick = { if (uiState.isScanning) viewModel.stopScan() else viewModel.startScan() },
+            onExitSelection = { viewModel.exitSelectionMode() }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PersonListContent(
+    uiState: PeopleUiState,
+    onUserClick: (User) -> Unit,
+    onUserLongClick: (User) -> Unit,
+    onScanClick: () -> Unit,
+    onExitSelection: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        if (uiState.isScanning) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-        }
-        
-        if (uiState.devices.isEmpty()) {
-            Text(
-                text = "No devices found",
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground
+        if (uiState.isSelectionMode) {
+            TopAppBar(
+                title = { Text("${uiState.selectedUsers.size} selected") },
+                navigationIcon = {
+                    IconButton(onClick = onExitSelection) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Exit selection"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = iOSBlue
+                )
             )
+        }
+
+        // Scan Button
+        Button(
+            onClick = { 
+//                if (uiState.isScanning) viewModel.stopScan() else viewModel.startScan()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = iOSBlue
+            )
+        ) {
+            Text(if (uiState.isScanning) "Stop Scanning" else "Start Scanning")
+        }
+
+        if (uiState.isScanning) {
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                color = iOSBlue
+            )
+        }
+
+        if (uiState.users.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No users found\nGenerate some users in Settings tab",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center
+                )
+            }
         } else {
-            // TODO: Implement device list
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(uiState.users) { user ->
+                    UserListItem(
+                        user = user,
+                        isSelected = uiState.selectedUsers.contains(user.id),
+                        onClick = { onUserClick(user) },
+                        onLongClick = { onUserLongClick(user) }
+                    )
+                }
+            }
         }
     }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun UserListItem(
+    user: User,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                else Color.Transparent
+            )
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // User Avatar
+        Surface(
+            modifier = Modifier.size(48.dp),
+            shape = CircleShape,
+            color = iOSLightBlue
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    text = user.name.take(1).uppercase(),
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
+
+        // User Info
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 16.dp)
+        ) {
+            Text(
+                text = user.name,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = user.status,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+            )
+        }
+
+        // Connection Status or Action Button
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_bluetooth_connect),
+                contentDescription = "Connect",
+                tint = iOSBlue
+            )
+        }
+    }
+
+    Divider(
+        modifier = Modifier.padding(start = 80.dp),
+        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f)
+    )
 }
 
 @Composable
@@ -293,7 +463,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                     onClick = { viewModel.generateRandomUsers() },
                     enabled = !uiState.isGenerating,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = WhatsAppGreen
+                        containerColor = iOSBlue
                     )
                 ) {
                     if (uiState.isGenerating) {
@@ -345,7 +515,7 @@ private fun UserProfileItem(
         Surface(
             modifier = Modifier.size(60.dp),
             shape = CircleShape,
-            color = WhatsAppLightGreen
+            color = iOSLightBlue
         ) {
             Box(
                 contentAlignment = Alignment.Center
@@ -381,7 +551,7 @@ private fun UserProfileItem(
             Icon(
                 painter = painterResource(id = R.drawable.ic_edit),
                 contentDescription = "Edit profile",
-                tint = WhatsAppGreen
+                tint = iOSBlue
             )
         }
     }

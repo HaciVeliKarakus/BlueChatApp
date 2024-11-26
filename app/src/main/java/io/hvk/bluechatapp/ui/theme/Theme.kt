@@ -17,29 +17,31 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = WhatsAppGreen,
-    secondary = WhatsAppLightGreen,
-    tertiary = WhatsAppTealGreen,
-    background = WhatsAppDarkBackground,
-    surface = WhatsAppDarkSurface,
+    primary = iOSBlue,
+    secondary = iOSLightBlue,
+    tertiary = iOSTealBlue,
+    background = iOSDarkBackground,
+    surface = iOSDarkSurface,
     onPrimary = Color.White,
     onSecondary = Color.White,
     onTertiary = Color.White,
     onBackground = Color.White,
-    onSurface = Color.White
+    onSurface = Color.White,
+    primaryContainer = iOSDarkSecondary
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = WhatsAppGreen,
-    secondary = WhatsAppLightGreen,
-    tertiary = WhatsAppTealGreen,
+    primary = iOSBlue,
+    secondary = iOSLightBlue,
+    tertiary = iOSTealBlue,
     background = Color.White,
     surface = Color.White,
     onPrimary = Color.White,
     onSecondary = Color.White,
     onTertiary = Color.White,
     onBackground = Color.Black,
-    onSurface = Color.Black
+    onSurface = Color.Black,
+    primaryContainer = Color(0xFFE5E5EA)
 )
 
 @Composable
