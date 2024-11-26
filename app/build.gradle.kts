@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "io.hvk.bluechatapp"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "io.hvk.bluechatapp"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
