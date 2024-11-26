@@ -15,13 +15,15 @@ import io.hvk.bluechatapp.R
 import io.hvk.bluechatapp.data.User
 import io.hvk.bluechatapp.ui.theme.iOSBlue
 import io.hvk.bluechatapp.ui.theme.iOSLightBlue
+import io.hvk.bluechatapp.ui.chat.ChatViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileDetailScreen(
     user: User,
     onBackClick: () -> Unit,
-    onStartChat: () -> Unit
+    onStartChat: () -> Unit,
+    viewModel: ChatViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     Scaffold(
         topBar = {
@@ -87,7 +89,10 @@ fun ProfileDetailScreen(
             Spacer(modifier = Modifier.height(32.dp))
             
             Button(
-                onClick = onStartChat,
+                onClick = {
+                    viewModel.startChat(user.id)
+                    onStartChat()
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = iOSBlue
                 ),
