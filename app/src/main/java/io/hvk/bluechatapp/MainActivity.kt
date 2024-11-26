@@ -16,13 +16,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.hvk.bluechatapp.ui.theme.*
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.Switch
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import io.hvk.bluechatapp.ui.chat.ChatViewModel
+import io.hvk.bluechatapp.ui.people.PeopleViewModel
+import io.hvk.bluechatapp.ui.settings.SettingsViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            BlueChatAppTheme {
+            val viewModel: MainViewModel = viewModel()
+            val isDarkTheme = viewModel.isDarkTheme.collectAsState()
+            
+            BlueChatAppTheme(darkTheme = isDarkTheme.value) {
                 MainScreen()
             }
         }
@@ -126,14 +136,19 @@ fun MainScreen() {
 }
 
 @Composable
-fun ChatListScreen() {
+fun ChatListScreen(viewModel: ChatViewModel = viewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        // We'll implement the chat list UI in the next step
-        EmptyChatsView()
+        if (uiState.messages.isEmpty()) {
+            EmptyChatsView()
+        } else {
+            // TODO: Implement chat list
+        }
     }
 }
 
@@ -168,17 +183,105 @@ data class TabItem(
 )
 
 @Composable
-fun PersonListScreen() {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Text("Person List")
-        // Add person list implementation
+fun PersonListScreen(viewModel: PeopleViewModel = viewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        if (uiState.isScanning) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+        }
+        
+        if (uiState.devices.isEmpty()) {
+            Text(
+                text = "No devices found",
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        } else {
+            // TODO: Implement device list
+        }
     }
 }
 
 @Composable
-fun SettingsScreen() {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Text("Settings")
-        // Add settings implementation
+fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
+    
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        // Theme Toggle
+        SettingsItem(
+            title = "Dark Theme",
+            subtitle = "Toggle dark/light theme",
+            trailing = {
+                Switch(
+                    checked = uiState.isDarkTheme,
+                    onCheckedChange = { viewModel.toggleTheme() }
+                )
+            }
+        )
+        
+        // Device Name
+        SettingsItem(
+            title = "Device Name",
+            subtitle = uiState.deviceName,
+            trailing = {
+                IconButton(onClick = { /* TODO: Show edit dialog */ }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_edit),
+                        contentDescription = "Edit name"
+                    )
+                }
+            }
+        )
+        
+        // Bluetooth Toggle
+        SettingsItem(
+            title = "Bluetooth",
+            subtitle = if (uiState.isBluetoothEnabled) "On" else "Off",
+            trailing = {
+                Switch(
+                    checked = uiState.isBluetoothEnabled,
+                    onCheckedChange = { viewModel.toggleBluetooth() }
+                )
+            }
+        )
+    }
+}
+
+@Composable
+private fun SettingsItem(
+    title: String,
+    subtitle: String,
+    trailing: @Composable () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+            )
+        }
+        trailing()
     }
 }
