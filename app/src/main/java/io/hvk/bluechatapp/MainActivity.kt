@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.hvk.bluechatapp.ui.theme.*
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -217,6 +218,18 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        // User Profile Section
+        UserProfileItem(
+            userName = uiState.userName,
+            userStatus = uiState.userStatus,
+            onEditClick = { /* TODO: Show edit profile dialog */ }
+        )
+        
+        Divider(
+            modifier = Modifier.padding(vertical = 8.dp),
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f)
+        )
+
         // Theme Toggle
         SettingsItem(
             title = "Dark Theme",
@@ -254,6 +267,123 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                 )
             }
         )
+
+        Divider(
+            modifier = Modifier.padding(vertical = 8.dp),
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f)
+        )
+
+        // Random Users Section
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "Random Users",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(
+                    onClick = { viewModel.generateRandomUsers() },
+                    enabled = !uiState.isGenerating,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = WhatsAppGreen
+                    )
+                ) {
+                    if (uiState.isGenerating) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White
+                        )
+                    } else {
+                        Text("Generate 100 Users")
+                    }
+                }
+                
+                Button(
+                    onClick = { viewModel.clearUsers() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red
+                    )
+                ) {
+                    Text("Clear Users")
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Total Users: ${uiState.users.size}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+    }
+}
+
+@Composable
+private fun UserProfileItem(
+    userName: String,
+    userStatus: String,
+    onEditClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onEditClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // User Avatar
+        Surface(
+            modifier = Modifier.size(60.dp),
+            shape = CircleShape,
+            color = WhatsAppLightGreen
+        ) {
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = userName.take(1).uppercase(),
+                    color = Color.White,
+                    style = MaterialTheme.typography.headlineMedium
+                )
+            }
+        }
+        
+        // User Info
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 16.dp)
+        ) {
+            Text(
+                text = userName,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = userStatus,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+            )
+        }
+        
+        // Edit Button
+        IconButton(onClick = onEditClick) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_edit),
+                contentDescription = "Edit profile",
+                tint = WhatsAppGreen
+            )
+        }
     }
 }
 
